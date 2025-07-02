@@ -4,7 +4,7 @@ import { getPlaceIcon, extractRegion } from '../utils/helpers';
 import SearchInput from './navigation/SearchInput';
 import RouteInfo from './navigation/RouteInfo';
 
-const NavigationControl = ({ onRouteSearch, routeInfo, selectedOption, onOptionChange }) => {
+const NavigationControl = ({ onRouteSearch, routeInfo, selectedOption, onOptionChange, onSectionHover, onSectionLeave }) => {
   const [startPoint, setStartPoint] = useState('');
   const [endPoint, setEndPoint] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -257,6 +257,8 @@ const NavigationControl = ({ onRouteSearch, routeInfo, selectedOption, onOptionC
         routeInfo={routeInfo}
         selectedOption={selectedOption}
         onOptionChange={onOptionChange}
+        onSectionHover={onSectionHover}
+        onSectionLeave={onSectionLeave}
       />
     </div>
   );

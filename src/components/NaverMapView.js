@@ -3,7 +3,25 @@ import { fetchRouteFromAPI } from '../services/naverApi';
 import { geocodeAddress } from '../services/geocodingService';
 import MapContainer from './map/MapContainer';
 
-const NaverMapView = ({ searchRequest, onRouteInfoUpdate, onRouteSearchComplete, selectedOption }) => {
+// 혼잡도 색상
+const congestionColors = ['#03c75a', '#ffe066', '#ff9900', '#ff4444'];
+
+// hex 색상을 더 어둡게 만드는 함수
+function darkenColor(hex, amount = 0.5) {
+  // hex: '#rrggbb', amount: 0~1 (0=원본, 1=완전검정)
+  let c = hex.replace('#', '');
+  if (c.length === 3) c = c.split('').map(x => x + x).join('');
+  const num = parseInt(c, 16);
+  let r = (num >> 16) & 0xff;
+  let g = (num >> 8) & 0xff;
+  let b = num & 0xff;
+  r = Math.round(r * (1 - amount));
+  g = Math.round(g * (1 - amount));
+  b = Math.round(b * (1 - amount));
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
+const NaverMapView = ({ searchRequest, onRouteInfoUpdate, onRouteSearchComplete, selectedOption, hoveredSectionIndex }) => {
   const mapInstance = useRef(null);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
 
@@ -44,7 +62,8 @@ const NaverMapView = ({ searchRequest, onRouteInfoUpdate, onRouteSearchComplete,
           startCoord,
           endCoord,
           mode: 'driving',
-          summary: mainRoute ? mainRoute.summary : null
+          summary: mainRoute ? mainRoute.summary : null,
+          sections: mainRoute && Array.isArray(mainRoute.section) ? mainRoute.section : []
         });
       }
     } catch (error) {
@@ -72,21 +91,94 @@ const NaverMapView = ({ searchRequest, onRouteInfoUpdate, onRouteSearchComplete,
   const drawDetailedRoute = (routeData, startCoord, endCoord) => {
     if (!mapInstance.current || !routeData) return;
     let pathArray = Array.isArray(routeData.path) ? routeData.path : [];
+    // section이 있을 때는 원본 path 사용, 없을 때만 샘플링
+    const hasSection = Array.isArray(routeData.section) && routeData.section.length > 0;
     const path = pathArray.map(coord => Array.isArray(coord) && coord.length === 2 ? new window.naver.maps.LatLng(coord[1], coord[0]) : null).filter(Boolean);
-    const simplifiedPath = path.length > 100 ? simplifyPath(path, 3) : path;
+    const simplifiedPath = !hasSection && path.length > 100 ? simplifyPath(path, 3) : path;
     clearMap();
-    window.currentRoute = new window.naver.maps.Polyline({
-      path: simplifiedPath,
-      strokeColor: getRouteColor('driving'),
-      strokeWeight: 8,
-      strokeOpacity: 1,
-      strokeStyle: 'solid',
-      zIndex: 1000,
-      map: mapInstance.current
-    });
-    if (simplifiedPath.length > 0) {
+
+    if (hasSection) {
+      // 기존 구간 Polyline 배열 초기화
+      window.routeSections = [];
+      const covered = Array(path.length).fill(false);
+      routeData.section.forEach((sec) => {
+        const startIdx = sec.pointIndex;
+        const endIdx = startIdx + sec.pointCount;
+        const sectionPath = path.slice(startIdx, endIdx + 1);
+        if (sectionPath.length < 2) return;
+        for (let i = startIdx; i <= endIdx && i < path.length; i++) covered[i] = true;
+        const poly = new window.naver.maps.Polyline({
+          path: sectionPath,
+          strokeColor: congestionColors[sec.congestion] || '#03c75a',
+          strokeWeight: 8,
+          strokeOpacity: 1,
+          strokeStyle: 'solid',
+          zIndex: 1000,
+          map: mapInstance.current
+        });
+        poly.congestion = sec.congestion;
+        poly.congestionColor = congestionColors[sec.congestion] || '#03c75a';
+        window.routeSections.push(poly);
+      });
+      // section이 커버하지 않는 path 구간(혼잡도 정보 없는 구간)도 기본색으로 그림
+      let start = null;
+      for (let i = 0; i < path.length; i++) {
+        if (!covered[i]) {
+          if (start === null) start = i;
+        } else {
+          if (start !== null && i - start > 0) {
+            const subPath = path.slice(start, i + 1);
+            if (subPath.length > 1) {
+              const poly = new window.naver.maps.Polyline({
+                path: subPath,
+                strokeColor: '#03c75a',
+                strokeWeight: 8,
+                strokeOpacity: 1,
+                strokeStyle: 'solid',
+                zIndex: 999,
+                map: mapInstance.current
+              });
+              poly.congestion = 0;
+              poly.congestionColor = '#03c75a';
+              window.routeSections.push(poly);
+            }
+            start = null;
+          }
+        }
+      }
+      if (start !== null && path.length - start > 1) {
+        const subPath = path.slice(start, path.length);
+        if (subPath.length > 1) {
+          const poly = new window.naver.maps.Polyline({
+            path: subPath,
+            strokeColor: '#03c75a',
+            strokeWeight: 8,
+            strokeOpacity: 1,
+            strokeStyle: 'solid',
+            zIndex: 999,
+            map: mapInstance.current
+          });
+          poly.congestion = 0;
+          poly.congestionColor = '#03c75a';
+          window.routeSections.push(poly);
+        }
+      }
+    } else {
+      // section 정보가 없으면 전체를 기본색으로 그림 (샘플링 적용)
+      window.currentRoute = new window.naver.maps.Polyline({
+        path: simplifiedPath,
+        strokeColor: getRouteColor('driving'),
+        strokeWeight: 8,
+        strokeOpacity: 1,
+        strokeStyle: 'solid',
+        zIndex: 1000,
+        map: mapInstance.current
+      });
+    }
+
+    if (path.length > 0) {
       window.startMarker = new window.naver.maps.Marker({
-        position: simplifiedPath[0],
+        position: path[0],
         map: mapInstance.current,
         zIndex: 1001,
         icon: {
@@ -96,7 +188,7 @@ const NaverMapView = ({ searchRequest, onRouteInfoUpdate, onRouteSearchComplete,
         }
       });
       window.endMarker = new window.naver.maps.Marker({
-        position: simplifiedPath[simplifiedPath.length - 1],
+        position: path[path.length - 1],
         map: mapInstance.current,
         zIndex: 1001,
         icon: {
@@ -107,7 +199,7 @@ const NaverMapView = ({ searchRequest, onRouteInfoUpdate, onRouteSearchComplete,
       });
     }
     const bounds = new window.naver.maps.LatLngBounds();
-    simplifiedPath.forEach(coord => bounds.extend(coord));
+    path.forEach(coord => bounds.extend(coord));
     mapInstance.current.fitBounds(bounds);
   };
 
@@ -116,6 +208,14 @@ const NaverMapView = ({ searchRequest, onRouteInfoUpdate, onRouteSearchComplete,
     if (window.currentRoute) {
       window.currentRoute.setMap(null);
       window.currentRoute = null;
+    }
+    if (window.routeSections && Array.isArray(window.routeSections)) {
+      window.routeSections.forEach(poly => poly.setMap(null));
+      window.routeSections = [];
+    }
+    if (window.routeSectionsShadow && Array.isArray(window.routeSectionsShadow)) {
+      window.routeSectionsShadow.forEach(shadow => shadow && shadow.setMap(null));
+      window.routeSectionsShadow = [];
     }
     if (window.startMarker) {
       window.startMarker.setMap(null);
@@ -163,6 +263,52 @@ const NaverMapView = ({ searchRequest, onRouteInfoUpdate, onRouteSearchComplete,
     const bounds = new window.naver.maps.LatLngBounds(startCoord, endCoord);
     mapInstance.current.fitBounds(bounds);
   };
+
+  // 구간 hover 시 스타일 강조 + 그림자 효과
+  useEffect(() => {
+    if (!window.routeSections || !Array.isArray(window.routeSections)) return;
+    // 기존 그림자 Polyline 제거
+    if (window.routeSectionsShadow && Array.isArray(window.routeSectionsShadow)) {
+      window.routeSectionsShadow.forEach(shadow => shadow && shadow.setMap(null));
+    }
+    window.routeSectionsShadow = [];
+    window.routeSections.forEach((poly, idx) => {
+      if (hoveredSectionIndex === idx) {
+        // 그림자 Polyline 추가 (혼잡도 색상의 어두운 버전)
+        const path = poly.getPath();
+        const shadow = new window.naver.maps.Polyline({
+          path: path,
+          strokeColor: darkenColor(poly.congestionColor, 0.5),
+          strokeWeight: 24,
+          strokeOpacity: 0.35,
+          strokeStyle: 'solid',
+          zIndex: 1999,
+          map: mapInstance.current,
+          strokeLineCap: 'round',
+          strokeLineJoin: 'round',
+        });
+        window.routeSectionsShadow[idx] = shadow;
+        // 강조 Polyline
+        poly.setOptions({
+          strokeWeight: 14,
+          strokeOpacity: 1,
+          zIndex: 2000,
+          strokeColor: poly.congestionColor,
+          strokeLineCap: 'round',
+          strokeLineJoin: 'round',
+        });
+      } else {
+        poly.setOptions({
+          strokeWeight: 8,
+          strokeOpacity: 1,
+          zIndex: 1000,
+          strokeColor: poly.congestionColor,
+          strokeLineCap: 'round',
+          strokeLineJoin: 'round',
+        });
+      }
+    });
+  }, [hoveredSectionIndex]);
 
   useEffect(() => {
     if (searchRequest && searchRequest.start && searchRequest.end && mapInstance.current) {

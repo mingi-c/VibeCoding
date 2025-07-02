@@ -7,6 +7,7 @@ function App() {
   const [routeInfo, setRouteInfo] = useState(null);
   const [searchRequest, setSearchRequest] = useState(null);
   const [selectedOption, setSelectedOption] = useState('traoptimal');
+  const [hoveredSectionIndex, setHoveredSectionIndex] = useState(null);
 
   const handleRouteSearch = (start, end) => {
     setSelectedOption('traoptimal');
@@ -32,6 +33,10 @@ function App() {
     }
   };
 
+  // 구간 hover 콜백
+  const handleSectionHover = (idx) => setHoveredSectionIndex(idx);
+  const handleSectionLeave = () => setHoveredSectionIndex(null);
+
   return (
     <div className="App">
       <header className="App-header">
@@ -45,12 +50,15 @@ function App() {
           routeInfo={routeInfo}
           selectedOption={selectedOption}
           onOptionChange={handleOptionChange}
+          onSectionHover={handleSectionHover}
+          onSectionLeave={handleSectionLeave}
         />
         <NaverMapView 
           searchRequest={searchRequest}
           onRouteInfoUpdate={handleRouteInfoUpdate}
           onRouteSearchComplete={handleRouteSearchComplete}
           selectedOption={selectedOption}
+          hoveredSectionIndex={hoveredSectionIndex}
         />
       </main>
     </div>
