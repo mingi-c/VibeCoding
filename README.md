@@ -1,70 +1,54 @@
-# Getting Started with Create React App
+# VibeCoding: Naver Maps 기반 경로 탐색/교통 시각화 웹앱
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## 주요 기능
+- **네이버 지도 기반 경로 탐색** (자동차 모드, Directions API)
+- **출발지/도착지 검색 자동완성**
+- **다양한 경로 옵션**(최적, 빠름, 편안) 제공 및 선택
+- **실시간 교통 혼잡도 시각화** (구간별 색상)
+- **구간별 상세 정보 테이블** (도로명, 거리, 혼잡도, 속도)
+- **테이블 hover 시 지도 구간 강조** (그림자/입체 효과)
+- **출발/도착 커스텀 마커** (이모지, 그라데이션, 그림자)
+- **풀스크린 반응형 지도 UI, 줌/내비게이션 컨트롤**
+- **Node.js 프록시 서버로 API 키 보안**
 
-## Available Scripts
+## 사용법
+1. `npm install`
+2. `.env` 파일에 네이버 API 키 설정
+   - 예시:
+     ```env
+     REACT_APP_NAVER_CLIENT_ID=발급받은_ID
+     REACT_APP_NAVER_CLIENT_SECRET=발급받은_SECRET
+     ```
+3. `npm start` (클라이언트: 3000번, 프록시 서버: 5000번)
+4. 웹에서 출발지/도착지 검색 → 경로 옵션 선택 → 지도/테이블에서 교통 정보 확인
 
-In the project directory, you can run:
+## 주요 기술 스택
+- React
+- Naver Maps JavaScript API, Directions API
+- Node.js(Express) 프록시 서버
+- CSS 모듈/직접 스타일링
 
-### `npm start`
+## 폴더 구조
+```
+vibecoding/
+  ├─ public/
+  ├─ src/
+  │   ├─ components/         # 지도, 경로, 검색, UI 컴포넌트
+  │   │   ├─ map/
+  │   │   ├─ navigation/
+  │   │   └─ ...
+  │   ├─ services/           # 네이버 API/지오코딩 서비스
+  │   ├─ utils/              # 상수, 헬퍼 함수
+  │   └─ ...
+  ├─ server.js               # Node.js 프록시 서버
+  └─ ...
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 개발/배포
+- 개발: `npm start` (리액트 개발 서버 + 프록시 서버 동시 실행)
+- 배포: `npm run build` 후 정적 파일 배포
+- GitHub Actions 등 CI/CD 연동 가능
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 기타
+- 네이버 API 키는 외부에 노출되지 않도록 주의하세요.
+- 문의/기여: PR 또는 이슈 등록
