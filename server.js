@@ -2,6 +2,9 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 require('dotenv').config();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = 4000;
@@ -10,10 +13,26 @@ const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
 const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
 const REACT_APP_NAVER_MAP_NCP_KEY_ID = process.env.REACT_APP_NAVER_MAP_NCP_KEY_ID;
 const REACT_APP_NAVER_MAP_NCP_KEY_SECRET = process.env.REACT_APP_NAVER_MAP_NCP_KEY_SECRET;
+const CLOVA_SPEECH_API_KEY = process.env.CLOVA_SPEECH_API_KEY;
+const CLOVA_SPEECH_DOMAIN_URL = process.env.CLOVA_SPEECH_DOMAIN_URL; // 예: https://clovaspeech-gw.ncloud.com/recog/v1/stt
 
 // 환경변수 설정 확인
 
 app.use(cors());
+app.use(express.json());
+
+const audioStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, 'src/audio'));
+  },
+  filename: function (req, file, cb) {
+    // 파일명 중복 방지: 타임스탬프+원본명
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, uniqueSuffix + ext);
+  }
+});
+const upload = multer({ storage: audioStorage });
 
 // 현실적인 모킹 응답 생성 함수
 function generateMockResponse(query) {
@@ -99,7 +118,11 @@ function generateMockResponse(query) {
 
 app.get('/api/naver/search', async (req, res) => {
   const query = req.query.query;
-  if (!query) return res.status(400).json({ error: 'Missing query parameter' });
+  console.log('[API] /api/naver/search 요청:', query);
+  if (!query) {
+    console.log('[API] /api/naver/search 실패: query 파라미터 없음');
+    return res.status(400).json({ error: 'Missing query parameter' });
+  }
   
   // API 키가 없거나 401 오류 시 테스트용 모킹 응답
   if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
@@ -115,10 +138,13 @@ app.get('/api/naver/search', async (req, res) => {
       }
     });
     res.json(response.data);
+    console.log('[API] /api/naver/search 응답 성공');
   } catch (err) {
     if (err.response && err.response.status === 401) {
+      console.log('[API] /api/naver/search 401, 모킹 응답 반환');
       return res.json(generateMockResponse(query));
     }
+    console.error('[API] /api/naver/search 오류:', err.message);
     res.status(500).json({ error: 'Naver API request failed', details: err.message });
   }
 });
@@ -126,8 +152,9 @@ app.get('/api/naver/search', async (req, res) => {
 // 경로 검색 API 엔드포인트
 app.get('/api/naver/directions', async (req, res) => {
   const { start, goal, mode = 'driving', option = 'traoptimal' } = req.query;
-  
+  console.log('[API] /api/naver/directions 요청:', { start, goal, mode, option });
   if (!start || !goal) {
+    console.log('[API] /api/naver/directions 실패: start 또는 goal 파라미터 없음');
     return res.status(400).json({ error: 'Missing start or goal parameter' });
   }
 
@@ -152,10 +179,13 @@ app.get('/api/naver/directions', async (req, res) => {
     });
     const data = response.data;
     res.json(data);
+    console.log('[API] /api/naver/directions 응답 성공');
   } catch (err) {
     if (err.response && err.response.status === 401) {
+      console.log('[API] /api/naver/directions 401, 모킹 응답 반환');
       return res.json(generateMockDirections(start, goal, mode));
     }
+    console.error('[API] /api/naver/directions 오류:', err.message);
     res.status(500).json({ 
       error: 'Directions API request failed', 
       details: err.message,
@@ -281,6 +311,76 @@ function generateRealisticPath(start, goal, mode) {
   
   return path;
 }
+
+app.post('/api/upload-audio', upload.single('audio'), async (req, res) => {
+  if (!req.file) {
+    console.log('[API] /api/upload-audio 실패: 파일 없음');
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+  console.log('[API] /api/upload-audio 요청:', req.file.filename);
+  // STT 처리
+  let sttText = null;
+  try {
+    const audioPath = req.file.path;
+    const audioData = fs.readFileSync(audioPath);
+    console.log('[STT] CLOVA Speech API 호출 시작:', audioPath);
+    const clovaRes = await axios.post(
+      `${CLOVA_SPEECH_DOMAIN_URL}?lang=Kor&assessment=true`,
+      audioData,
+      {
+        headers: {
+          'X-CLOVASPEECH-API-KEY': CLOVA_SPEECH_API_KEY,
+          'Content-Type': 'application/octet-stream',
+        },
+        timeout: 60000
+      }
+    );
+    sttText = clovaRes.data.text;
+    console.log('[STT] CLOVA 응답:', sttText);
+    // STT 결과를 src/stt/파일명.txt로 저장
+    const sttPath = path.join(__dirname, 'src/stt', req.file.filename + '.txt');
+    fs.writeFileSync(sttPath, sttText, 'utf-8');
+    console.log('[STT] 결과 파일 저장:', sttPath);
+  } catch (err) {
+    sttText = null;
+    console.error('[STT] 처리 오류:', err.message, err.response?.data);
+  }
+  res.json({ success: true, filename: req.file.filename, path: `/src/audio/${req.file.filename}`, stt: sttText });
+  console.log('[API] /api/upload-audio 응답:', { success: true, filename: req.file.filename, stt: sttText });
+});
+
+app.post('/api/stt', async (req, res) => {
+  const { filename } = req.body;
+  console.log('[API] /api/stt 요청:', filename);
+  if (!filename) {
+    console.log('[API] /api/stt 실패: filename 파라미터 없음');
+    return res.status(400).json({ error: 'filename is required' });
+  }
+  const audioPath = path.join(__dirname, 'src/audio', filename);
+  if (!fs.existsSync(audioPath)) {
+    console.log('[API] /api/stt 실패: 파일 없음');
+    return res.status(404).json({ error: 'file not found' });
+  }
+  try {
+    const audioData = fs.readFileSync(audioPath);
+    const clovaRes = await axios.post(
+      `${CLOVA_SPEECH_DOMAIN_URL}?lang=Kor&assessment=true`,
+      audioData,
+      {
+        headers: {
+          'X-CLOVASPEECH-API-KEY': CLOVA_SPEECH_API_KEY,
+          'Content-Type': 'application/octet-stream',
+        },
+        timeout: 60000
+      }
+    );
+    res.json({ text: clovaRes.data.text, raw: clovaRes.data });
+    console.log('[API] /api/stt 응답 성공:', clovaRes.data.text);
+  } catch (err) {
+    console.error('[API] /api/stt 오류:', err.message, err.response?.data);
+    res.status(500).json({ error: 'CLOVA Speech API 호출 실패', details: err.message, data: err.response?.data });
+  }
+});
 
 app.listen(PORT, () => {
   // Proxy server running on http://localhost:${PORT}

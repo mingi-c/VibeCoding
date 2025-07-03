@@ -30,8 +30,8 @@ const RouteInfo = ({ routeInfo, selectedOption, onOptionChange, onSectionHover, 
               marginRight: 6,
               padding: '4px 14px',
               borderRadius: 6,
-              border: selectedOption === key ? '2px solid #03c75a' : '1px solid #ccc',
-              background: selectedOption === key ? '#eafff3' : '#fff',
+              border: selectedOption === key ? '2px solid #0057a8' : '1px solid #ccc',
+              background: selectedOption === key ? '#E6FFFF' : '#fff',
               color: '#222',
               fontWeight: selectedOption === key ? 'bold' : 'normal',
               cursor: 'pointer',
@@ -46,7 +46,7 @@ const RouteInfo = ({ routeInfo, selectedOption, onOptionChange, onSectionHover, 
       <p><strong>목적지:</strong> {routeInfo.end}</p>
       <p><strong>교통수단:</strong> 🚗 자동차</p>
       {summary && (
-        <div className="route-summary" style={{ background: '#f0f9f0', borderRadius: 8, padding: 8, marginBottom: 10 }}>
+        <div className="route-summary" style={{ background: '#E6FFFF', borderRadius: 8, padding: 8, marginBottom: 10 }}>
           <p><strong>거리:</strong> {formatDistance(summary.distance)}</p>
           <p><strong>소요시간:</strong> {formatDuration(summary.duration)}</p>
           {summary.taxiFare > 0 && (

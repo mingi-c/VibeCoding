@@ -200,7 +200,8 @@ const NaverMapView = ({ searchRequest, onRouteInfoUpdate, onRouteSearchComplete,
     }
     const bounds = new window.naver.maps.LatLngBounds();
     path.forEach(coord => bounds.extend(coord));
-    mapInstance.current.fitBounds(bounds);
+    // 헤더(상단 100), 왼쪽 검색창(400), 하단/우측 40씩 패딩
+    mapInstance.current.fitBounds(bounds, { top: 100, left: 400, bottom: 40, right: 40 });
   };
 
   // 지도에서 기존 경로와 마커들 제거
@@ -261,7 +262,8 @@ const NaverMapView = ({ searchRequest, onRouteInfoUpdate, onRouteSearchComplete,
       }
     });
     const bounds = new window.naver.maps.LatLngBounds(startCoord, endCoord);
-    mapInstance.current.fitBounds(bounds);
+    // 헤더(상단 100), 왼쪽 검색창(400), 하단/우측 40씩 패딩
+    mapInstance.current.fitBounds(bounds, { top: 100, left: 400, bottom: 40, right: 40 });
   };
 
   // 구간 hover 시 스타일 강조 + 그림자 효과
