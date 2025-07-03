@@ -3,6 +3,7 @@ import './App.css';
 import NaverMapView from './components/NaverMapView';
 import NavigationControl from './components/NavigationControl';
 import { fetchRouteFromAPI } from './services/naverApi';
+import { DETOUR_CATEGORY_MAP } from './utils/constants';
 
 function App() {
   const [routeInfo, setRouteInfo] = useState(null);
@@ -18,6 +19,16 @@ function App() {
   const [detourRoadName, setDetourRoadName] = useState('');
   const [isDetourLoading, setIsDetourLoading] = useState(false);
   const [showDetourFailPopup, setShowDetourFailPopup] = useState(false);
+  const [detourSituation, setDetourSituation] = useState('');
+
+  function getDetourCategory(sttText) {
+    for (const { category, keywords } of DETOUR_CATEGORY_MAP) {
+      if (keywords.some(keyword => sttText.includes(keyword))) {
+        return category;
+      }
+    }
+    return null;
+  }
 
   const handleRouteSearch = (start, end) => {
     setSelectedOption('traoptimal');
@@ -67,8 +78,10 @@ function App() {
                                  : [];
           // STT 결과에서 sectionRoadNames 중 언급된 도로명 찾기
           const found = sectionRoadNames.find(road => data.stt.replaceAll(' ', '').includes(road));
-          if (found) {
+          const detourCategory = getDetourCategory(data.stt);
+          if (found && detourCategory) {
             setDetourRoadName(found);
+            setDetourSituation(detourCategory);
             setShowDetourPopup(true);
           }
         }
@@ -267,7 +280,7 @@ function App() {
         <div className="detour-popup">
           <div className="detour-popup-content">
             <h3>우회 경로 안내</h3>
-            <p><b>{detourRoadName}</b> 구간에서 사고/혼잡이 감지되었습니다.</p>
+            <p><b>{detourRoadName}</b> 구간에서 <b>{detourSituation}</b>이(가) 감지되었습니다.</p>
             <p>우회 경로를 안내해드릴까요?</p>
             <div className="detour-popup-buttons">
               <button onClick={handleDetourConfirm} className="detour-confirm-btn">

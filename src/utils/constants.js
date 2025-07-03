@@ -40,6 +40,16 @@ export const SEARCH_CONFIG = {
   }
 };
 
+// 우회 경로 관련 상수
+export const DETOUR_CATEGORY_MAP = [
+  { category: '사고', keywords: ['사고', '추돌', '충돌', '접촉', '사고로 인해', '사고 발생', '사고 현장'] },
+  { category: '집회/시위', keywords: ['집회', '시위', '행진', '집회 예정', '시위 행진'] },
+  { category: '도로통제', keywords: ['통제', '진입 금지', '차단', '일부 구간 통제', '진입 불가'] },
+  { category: '행사', keywords: ['행사', '마라톤', '퍼레이드', '이벤트'] },
+  { category: '공사', keywords: ['공사', '보수', '차로 축소', '공사로 인한', '공사 구간'] },
+  { category: '혼잡', keywords: ['지연', '지체', '정체 발생', '우회', '차량 정체', '교통량'] }
+];
+
 // 서울 주요 지역 좌표
 export const SEOUL_AREAS = {
   '강남': [127.027, 37.498],
