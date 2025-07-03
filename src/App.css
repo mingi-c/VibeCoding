@@ -18,10 +18,13 @@
 }
 
 .App-header {
-  background-color: #03c75a;
-  padding: 15px;
-  color: white;
-  flex-shrink: 0;
+  background: none;
+  box-shadow: none;
+  margin-left: 0;
+  flex: 1;
+  color: #fff;
+  text-align: left;
+  padding-left: 20px;
 }
 
 .App-header h1 {
@@ -44,21 +47,30 @@
   overflow: hidden;
 }
 
+@media (max-width: 600px) {
+  .solomon-header {
+    min-height: 56px;
+  }
+  .App-main {
+    padding-top: 0;
+  }
+  .solomon-logo {
+    width: 100px;
+    margin-left: 12px;
+  }
+  .solomon-logo-bg {
+    padding-right: 8px;
+  }
+  .App-header {
+    margin-left: 0;
+  }
+}
+
 .navigation-control {
-  background: white;
-  padding: 20px;
-  border-radius: 0;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-  margin: 0;
-  max-width: none;
-  width: 350px;
-  flex-shrink: 0;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
   position: absolute;
-  top: 40px;
+  top: 100px;
   left: 40px;
+  background: white;
   padding: 24px 24px 16px 24px;
   border-radius: 10px;
   box-shadow: 0 2px 16px rgba(0,0,0,0.12);
@@ -108,7 +120,7 @@
 
 .input-field input:focus {
   outline: none;
-  border-color: #03c75a;
+  border-color: #0064BF;
   box-shadow: 0 0 0 2px rgba(3, 199, 90, 0.1);
 }
 
@@ -190,7 +202,7 @@
 
 .suggestion-region {
   font-weight: 500;
-  color: #03c75a;
+  color: #0064BF;
   font-size: 12px;
   margin-top: 2px;
   background-color: #f0f9f0;
@@ -219,7 +231,7 @@
 .search-button {
   width: 100%;
   padding: 12px;
-  background-color: #03c75a;
+  background-color: #0064BF;
   color: white;
   border: none;
   border-radius: 4px;
@@ -231,7 +243,7 @@
 }
 
 .search-button:hover:not(:disabled) {
-  background-color: #02b351;
+  background-color: #0057a8;
 }
 
 .search-button:disabled {
@@ -316,7 +328,7 @@
 /* 검색/네비게이션 컨트롤을 지도 위에 오버레이로 배치 */
 .navigation-control {
   position: absolute;
-  top: 40px;
+  top: 100px;
   left: 40px;
   background: white;
   padding: 24px 24px 16px 24px;
@@ -330,6 +342,7 @@
 
 @media (max-width: 700px) {
   .navigation-control {
+    top: 72px;
     left: 10px;
     right: 10px;
     min-width: unset;
@@ -401,13 +414,13 @@
 
 .mode-btn:hover {
   background: #f5f5f5;
-  border-color: #03c75a;
+  border-color: #0064BF;
 }
 
 .mode-btn.active {
-  background: #03c75a;
+  background: #0064BF;
   color: white;
-  border-color: #03c75a;
+  border-color: #0064BF;
 }
 
 /* 경로 정보 */
@@ -461,7 +474,7 @@
 }
 
 .loading-spinner {
-  background: #03c75a;
+  background: #0064BF;
   color: white;
   padding: 15px 25px;
   border-radius: 25px;
@@ -497,13 +510,13 @@
 
 .input-group input:focus {
   outline: none;
-  border-color: #03c75a;
+  border-color: #0064BF;
   box-shadow: 0 0 0 2px rgba(3, 199, 90, 0.1);
 }
 
 .search-button {
   padding: 12px 24px;
-  background: #03c75a;
+  background: #0064BF;
   color: white;
   border: none;
   border-radius: 6px;
@@ -515,7 +528,7 @@
 }
 
 .search-button:hover {
-  background: #02a84a;
+  background: #0057a8;
 }
 
 .search-button:disabled {
@@ -593,4 +606,59 @@
   background: #f8d7da;
   border: 1px solid #f5c6cb;
   border-radius: 4px;
+}
+
+.solomon-logo {
+  position: fixed;
+  top: 24px;
+  right: 32px;
+  width: 140px;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+.solomon-header {
+  width: 100%;
+  background: #0064BF;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  z-index: 1000;
+  flex-direction: row;
+}
+
+.solomon-logo-bg {
+  background: #fff;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 32px 0 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.solomon-logo {
+  position: relative;
+  top: 0;
+  right: 0;
+  width: 140px;
+  margin-left: 32px;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+@media (max-width: 600px) {
+  .solomon-logo {
+    width: 100px;
+    margin-left: 12px;
+  }
+  .solomon-header {
+    min-height: 56px;
+  }
+  .solomon-logo-bg {
+    padding-right: 8px;
+  }
+  .App-header {
+    margin-left: 0;
+  }
 }

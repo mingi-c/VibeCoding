@@ -39,11 +39,15 @@ function App() {
 
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>네이버 지도 네비게이션</h1>
-        <p>출발지와 목적지를 입력하여 경로를 확인하세요</p>
-      </header>
-      
+      <div className="solomon-header">
+        <div className="solomon-logo-bg">
+          <img src="/solomon_logo.png" alt="solomon tech logo" className="solomon-logo" />
+        </div>
+        <header className="App-header">
+          <h1>Vibe Coding 네비게이션</h1>
+          <p>출발지와 목적지를 입력하여 경로를 확인하세요</p>
+        </header>
+      </div>
       <main className="App-main">
         <NavigationControl 
           onRouteSearch={handleRouteSearch} 
