@@ -31,7 +31,7 @@ const NaverMapView = ({ searchRequest, onRouteInfoUpdate, onRouteSearchComplete,
   }, []);
 
   // 경로 검색 함수
-  const searchRoute = useCallback(async (start, end, option = 'traoptimal') => {
+  const searchRoute = useCallback(async (start, end, option = 'traoptimal', waypoint = null) => {
     if (!mapInstance.current) return;
     if (!window.naver) return;
     setIsLoadingRoute(true);
@@ -46,7 +46,7 @@ const NaverMapView = ({ searchRequest, onRouteInfoUpdate, onRouteSearchComplete,
       }
       const startStr = `${startCoord.lng()},${startCoord.lat()}`;
       const endStr = `${endCoord.lng()},${endCoord.lat()}`;
-      const apiData = await fetchRouteFromAPI(startStr, endStr, 'driving', option);
+      const apiData = await fetchRouteFromAPI(startStr, endStr, 'driving', option, waypoint);
       // option에 해당하는 경로만 지도에 그림
       const mainRoute = apiData?.[option]?.[0] || apiData?.traoptimal?.[0] || apiData?.trafast?.[0] || apiData?.tracomfort?.[0] || apiData?.trarecommend?.[0];
       if (mainRoute) {
@@ -315,7 +315,12 @@ const NaverMapView = ({ searchRequest, onRouteInfoUpdate, onRouteSearchComplete,
   useEffect(() => {
     if (searchRequest && searchRequest.start && searchRequest.end && mapInstance.current) {
       const optionToUse = searchRequest.option || selectedOption;
-      searchRoute(searchRequest.start, searchRequest.end, optionToUse);
+      searchRoute(
+        searchRequest.start,
+        searchRequest.end,
+        optionToUse,
+        searchRequest.waypoint || null
+      );
     }
   }, [searchRequest, selectedOption, searchRoute]);
 

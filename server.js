@@ -151,8 +151,8 @@ app.get('/api/naver/search', async (req, res) => {
 
 // 경로 검색 API 엔드포인트
 app.get('/api/naver/directions', async (req, res) => {
-  const { start, goal, mode = 'driving', option = 'traoptimal' } = req.query;
-  console.log('[API] /api/naver/directions 요청:', { start, goal, mode, option });
+  const { start, goal, mode = 'driving', option = 'traoptimal', waypoint, waypoints } = req.query;
+  console.log('[API] /api/naver/directions 요청:', { start, goal, mode, option, waypoint, waypoints });
   if (!start || !goal) {
     console.log('[API] /api/naver/directions 실패: start 또는 goal 파라미터 없음');
     return res.status(400).json({ error: 'Missing start or goal parameter' });
@@ -166,12 +166,16 @@ app.get('/api/naver/directions', async (req, res) => {
     let apiMode = mode;
     if (apiMode === 'transit') apiMode = 'pubtrans';
     const url = `https://maps.apigw.ntruss.com/map-direction-15/v1/${apiMode}`;
+    const params = {
+      start: start,
+      goal: goal,
+      option: option
+    };
+    // waypoint(단일) 또는 waypoints(복수) 지원
+    if (waypoints) params.waypoints = waypoints;
+    else if (waypoint) params.waypoints = waypoint;
     const response = await axios.get(url, {
-      params: {
-        start: start,
-        goal: goal,
-        option: option
-      },
+      params,
       headers: {
         'X-NCP-APIGW-API-KEY-ID': REACT_APP_NAVER_MAP_NCP_KEY_ID,
         'X-NCP-APIGW-API-KEY': REACT_APP_NAVER_MAP_NCP_KEY_SECRET

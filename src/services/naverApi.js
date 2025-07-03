@@ -16,8 +16,12 @@ export async function searchWithNaverLocal(query) {
 }
 
 // 네이버 Directions API 호출 (자동차 전용)
-export async function fetchRouteFromAPI(start, end, mode = 'driving', option = 'traoptimal') {
-  const response = await fetch(`/api/naver/directions?start=${encodeURIComponent(start)}&goal=${encodeURIComponent(end)}&mode=${mode}&option=${option}`);
+export async function fetchRouteFromAPI(start, end, mode = 'driving', option = 'traoptimal', waypoint = null) {
+  let url = `/api/naver/directions?start=${encodeURIComponent(start)}&goal=${encodeURIComponent(end)}&mode=${mode}&option=${option}`;
+  if (waypoint) {
+    url += `&waypoint=${encodeURIComponent(waypoint)}`;
+  }
+  const response = await fetch(url);
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const data = await response.json();
   if (data.code === 0 && data.route) {
